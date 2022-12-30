@@ -1,6 +1,7 @@
 import tensorflow as tf
 from tensorflow import keras
 import os
+
 tf.config.run_functions_eagerly(True)
 
 # To force inference using CPU only
@@ -37,8 +38,13 @@ def inference(image: tf.Tensor):
     sorted_result = {k: v for k, v in sorted(result.items(), key=lambda item: item[1])}
     return sorted_result
 
+
 # Output Signature function for TensorFlow Serving
-@tf.function(input_signature=[tf.TensorSpec(name="image_bytes_string", shape=None, dtype=tf.string)])
+@tf.function(
+    input_signature=[
+        tf.TensorSpec(name="image_bytes_string", shape=None, dtype=tf.string)
+    ]
+)
 def predict_b64_string(b64str_tensor):
     img = tf.reshape(b64str_tensor, [])
     img = tf.io.decode_image(img, channels=3, dtype=tf.float16, expand_animations=False)
@@ -46,12 +52,11 @@ def predict_b64_string(b64str_tensor):
     res = inference(tensor)
     return res
 
+
 model.save(
-    './mobilenetv2-imagenet-devfest/{version_number}',
-    save_format='tf',
+    "./mobilenetv2-imagenet-devfest/{version_number}",
+    save_format="tf",
     include_optimizer=True,
     overwrite=True,
-    signatures={
-        "image_b64string_signature":predict_b64_string
-    }
+    signatures={"image_b64string_signature": predict_b64_string},
 )
